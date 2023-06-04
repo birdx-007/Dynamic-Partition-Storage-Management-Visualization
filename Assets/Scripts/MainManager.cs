@@ -7,8 +7,12 @@ using UnityEngine.UI;
 
 public class MainManager : SingletonMonoBehaviour<MainManager>
 {
+    public Camera persistentCamera;
+    public const int maxMemorySize = 256;
+    public const int OSMemorySize = 20;
     private void Awake()
     {
-        SceneManager.LoadScene("Persistent", LoadSceneMode.Additive);
+        SceneManager.LoadScene("MainScene", LoadSceneMode.Additive);
+        persistentCamera.gameObject.SetActive(false);
     }
 }
