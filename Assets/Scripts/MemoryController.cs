@@ -25,7 +25,7 @@ public class IdleLinkedListNode
     }
 }
 
-public class IdleLinkedListController : MonoBehaviour
+public class MemoryController : MonoBehaviour
 {
     public LinkedList<IdleLinkedListNode> idleLinkedList;
     private LinkedListNode<IdleLinkedListNode> latestAllocated;
