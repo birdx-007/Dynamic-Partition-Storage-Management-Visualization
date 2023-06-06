@@ -7,16 +7,20 @@ using UnityEngine.UI;
 
 public class ProcessMemoryBlock : MonoBehaviour
 {
+    private MemoryController memoryController;
     public Image fillImage;
-    public RectTransform parentRectTransform;
+    private RectTransform parentRectTransform;
     private RectTransform rectTransform;
     private float frameWidth;
     private float frameHeight;
     public float existTime;
     private bool isExisting = false;
     private float leftExistTime;
+    private int start;
+    private int size;
     private void Awake()
     {
+        memoryController = GameObject.FindWithTag("GameController").GetComponent<MemoryController>();
         rectTransform = GetComponent<RectTransform>();
         parentRectTransform = rectTransform.parent.GetComponentInParent<RectTransform>();
         frameWidth = parentRectTransform.rect.width;
@@ -32,6 +36,8 @@ public class ProcessMemoryBlock : MonoBehaviour
             {
                 leftExistTime = 0;
                 isExisting = false;
+                memoryController.Release(start,size);
+                Destroy(gameObject);
             }
             fillImage.fillAmount = leftExistTime / existTime;
         }
@@ -39,7 +45,9 @@ public class ProcessMemoryBlock : MonoBehaviour
 
     public void Set(int start,int size)
     {
-        rectTransform.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, frameHeight * start / MainManager.maxMemorySize, frameHeight * size / MainManager.maxMemorySize);
+        this.start = start;
+        this.size = size;
+        rectTransform.SetInsetAndSizeFromParentEdge(RectTransform.Edge.Top, frameHeight * start / MemoryController.maxMemorySize, frameHeight * size / MemoryController.maxMemorySize);
     }
 
     public void StartExisting(float time)

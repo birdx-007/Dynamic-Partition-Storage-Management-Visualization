@@ -31,7 +31,10 @@ public class NumberInputController : MonoBehaviour
 
     public void OnSubmitButtonPressed()
     {
-        memoryController.TryAllocate(number);
-        inputField.text = "";
+        if (number > 0)
+        {
+            memoryController.TryAllocate(number);
+            inputField.text = "";
+        }
     }
 }

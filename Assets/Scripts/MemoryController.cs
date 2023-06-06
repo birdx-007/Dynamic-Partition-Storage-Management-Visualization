@@ -33,7 +33,7 @@ public class IdleLinkedListNode
     }
 }
 
-public class MemoryController : SingletonMonoBehaviour<MemoryController>
+public class MemoryController : MonoBehaviour
 {
     public GameObject processMemoryPrefab;
     public RectTransform memoryFrameRectTransform;
@@ -41,13 +41,15 @@ public class MemoryController : SingletonMonoBehaviour<MemoryController>
     public Slider allocationTypeSlider;
     public LinkedList<IdleLinkedListNode> idleLinkedList;
     private LinkedListNode<IdleLinkedListNode> latestAllocated;
+    public const int maxMemorySize = 256;
+    public const int OSMemorySize = 20;
     private void Awake()
     {
         idleLinkedList = new LinkedList<IdleLinkedListNode>();
         //IdleLinkedListNode nodeOS = new IdleLinkedListNode(NodeType.P, 0, MainManager.OSMemorySize);
         //idleLinkedList.AddLast(nodeOS);
-        InstantiateMemory(0, MainManager.OSMemorySize,-1);
-        IdleLinkedListNode node = new IdleLinkedListNode(NodeType.H, MainManager.OSMemorySize, MainManager.maxMemorySize - MainManager.OSMemorySize);
+        InstantiateMemory(0, OSMemorySize,-1);
+        IdleLinkedListNode node = new IdleLinkedListNode(NodeType.H, OSMemorySize, maxMemorySize - OSMemorySize);
         idleLinkedList.AddLast(node);
         latestAllocated = idleLinkedList.First;
     }
@@ -109,7 +111,17 @@ public class MemoryController : SingletonMonoBehaviour<MemoryController>
     public void Release(int start, int size)
     {
         var toBeReleased = new IdleLinkedListNode(NodeType.P,start,size);
-        var target =  idleLinkedList.Find(toBeReleased);
+        LinkedListNode<IdleLinkedListNode> target = null;
+        var current = idleLinkedList.First;
+        while (current != null)
+        {
+            if (current.Value.type == NodeType.P && current.Value.start == start && current.Value.size == size)
+            {
+                target = current;
+                break;
+            }
+            current = current.Next;
+        }
         if (target != null)
         {
             target.Value.type = NodeType.H;
@@ -189,7 +201,7 @@ public class MemoryController : SingletonMonoBehaviour<MemoryController>
     {
         var current = idleLinkedList.First;
         LinkedListNode<IdleLinkedListNode> best = null;
-        int bestDeltaSize = MainManager.maxMemorySize - MainManager.OSMemorySize;
+        int bestDeltaSize = maxMemorySize - OSMemorySize;
         while (current != null)
         {
             if(current.Value.type==NodeType.H && current.Value.size >= requiredMemorySize)
