@@ -25,16 +25,20 @@ public class IdleLinkedListNode
     }
 }
 
-public class MemoryController : MonoBehaviour
+public class MemoryController : SingletonMonoBehaviour<MemoryController>
 {
+    public GameObject processMemoryPrefab;
+    public RectTransform memoryFrameRectTransform;
     public LinkedList<IdleLinkedListNode> idleLinkedList;
     private LinkedListNode<IdleLinkedListNode> latestAllocated;
     private void Awake()
     {
         idleLinkedList = new LinkedList<IdleLinkedListNode>();
         //IdleLinkedListNode nodeOS = new IdleLinkedListNode(NodeType.P, 0, MainManager.OSMemorySize);
-        IdleLinkedListNode node = new IdleLinkedListNode(NodeType.H, MainManager.OSMemorySize, MainManager.maxMemorySize - MainManager.OSMemorySize);
         //idleLinkedList.AddLast(nodeOS);
+        GameObject memoryOS = Instantiate(processMemoryPrefab, memoryFrameRectTransform);
+        memoryOS.GetComponent<ProcessMemoryBlock>().Set(0, MainManager.OSMemorySize);
+        IdleLinkedListNode node = new IdleLinkedListNode(NodeType.H, MainManager.OSMemorySize, MainManager.maxMemorySize - MainManager.OSMemorySize);
         idleLinkedList.AddLast(node);
         latestAllocated = idleLinkedList.First;
     }
