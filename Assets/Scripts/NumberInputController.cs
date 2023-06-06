@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class NumberInputController : MonoBehaviour
 {
     public InputField inputField;
+    public MemoryController memoryController;
     public int number;
     public void UpdateNumber()
     {
@@ -26,5 +27,11 @@ public class NumberInputController : MonoBehaviour
             inputField.text = inputField.text.Remove(inputField.text.Length - 1);
             UpdateNumber();
         }
+    }
+
+    public void OnSubmitButtonPressed()
+    {
+        memoryController.TryAllocate(number);
+        inputField.text = "";
     }
 }
