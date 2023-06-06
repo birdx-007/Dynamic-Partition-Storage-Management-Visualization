@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.Assertions.Must;
 using UnityEngine.UI;
@@ -39,10 +38,13 @@ public class MemoryController : MonoBehaviour
     public RectTransform memoryFrameRectTransform;
     public AllocationType allocationType;
     public Slider allocationTypeSlider;
+    public Toggle allocationEternityToggle;
+    public Image allocationStateImage;
     public LinkedList<IdleLinkedListNode> idleLinkedList;
     private LinkedListNode<IdleLinkedListNode> latestAllocated;
     public const int maxMemorySize = 256;
     public const int OSMemorySize = 20;
+    public bool processEternal = true;
     private void Awake()
     {
         idleLinkedList = new LinkedList<IdleLinkedListNode>();
@@ -53,12 +55,30 @@ public class MemoryController : MonoBehaviour
         idleLinkedList.AddLast(node);
         latestAllocated = idleLinkedList.First;
     }
+    void Start()
+    {
+        processEternal = false;
+        TryAllocate(30,10);
+        TryAllocate(40,-1);
+        TryAllocate(20,10);
+        TryAllocate(30,-1);
+        TryAllocate(5, 10);
+        TryAllocate(65,-1);
+        TryAllocate(46,10);
+        processEternal = true;
+        latestAllocated = idleLinkedList.First;
+    }
     public void SetAllocationType()
     {
         allocationType = (AllocationType)allocationTypeSlider.value;
     }
 
-    public void TryAllocate(int size, float time = 8f)
+    public void SetAllocationEternity()
+    {
+        processEternal = allocationEternityToggle.isOn;
+    }
+
+    public void TryAllocate(int size, float time = 10f)
     {
         bool canAllocate;
         int start;
@@ -82,7 +102,19 @@ public class MemoryController : MonoBehaviour
         }
         if (canAllocate)
         {
-            InstantiateMemory(start, size, time);
+            if (processEternal)
+            {
+                InstantiateMemory(start, size, -1);
+            }
+            else
+            {
+                InstantiateMemory(start, size, time);
+            }
+            allocationStateImage.color = Color.green;
+        }
+        else
+        {
+            allocationStateImage.color = Color.red;
         }
     }
     public void InstantiateMemory(int start, int size,float time)
@@ -129,11 +161,19 @@ public class MemoryController : MonoBehaviour
             {
                 target.Value.size += target.Previous.Value.size;
                 target.Value.start = target.Previous.Value.start;
+                if (latestAllocated == target.Previous)
+                {
+                    latestAllocated = target;
+                }
                 idleLinkedList.Remove(target.Previous);
             }
             if (target.Next != null && target.Next.Value.type == NodeType.H)
             {
                 target.Value.size += target.Next.Value.size;
+                if (latestAllocated == target.Next)
+                {
+                    latestAllocated = target;
+                }
                 idleLinkedList.Remove(target.Next);
             }
         }
@@ -148,6 +188,11 @@ public class MemoryController : MonoBehaviour
                 if(current.Value.size == requiredMemorySize)
                 {
                     current.Value.type = NodeType.P;
+                    latestAllocated = current.Next;
+                    if (latestAllocated == null)
+                    {
+                        latestAllocated = idleLinkedList.First;
+                    }
                     start = current.Value.start;
                     return true;
                 }
@@ -155,6 +200,11 @@ public class MemoryController : MonoBehaviour
                 idleLinkedList.AddAfter(current, nodeH);
                 current.Value.type = NodeType.P;
                 current.Value.size = requiredMemorySize;
+                latestAllocated = current.Next;
+                if (latestAllocated == null)
+                {
+                    latestAllocated = idleLinkedList.First;
+                }
                 start = current.Value.start;
                 return true;
             }
@@ -175,6 +225,10 @@ public class MemoryController : MonoBehaviour
                 {
                     current.Value.type = NodeType.P;
                     latestAllocated = current.Next;
+                    if (latestAllocated == null)
+                    {
+                        latestAllocated = idleLinkedList.First;
+                    }
                     start = current.Value.start;
                     return true;
                 }
@@ -183,6 +237,10 @@ public class MemoryController : MonoBehaviour
                 current.Value.type = NodeType.P;
                 current.Value.size = requiredMemorySize;
                 latestAllocated = current.Next;
+                if (latestAllocated == null)
+                {
+                    latestAllocated = idleLinkedList.First;
+                }
                 start = current.Value.start;
                 return true;
             }
@@ -209,6 +267,11 @@ public class MemoryController : MonoBehaviour
                 if (current.Value.size == requiredMemorySize) // already best
                 {
                     current.Value.type = NodeType.P;
+                    latestAllocated = current.Next;
+                    if (latestAllocated == null)
+                    {
+                        latestAllocated = idleLinkedList.First;
+                    }
                     start = current.Value.start;
                     return true;
                 }
@@ -229,6 +292,11 @@ public class MemoryController : MonoBehaviour
             idleLinkedList.AddAfter(best, nodeH);
             best.Value.type = NodeType.P;
             best.Value.size = requiredMemorySize;
+            latestAllocated = best.Next;
+            if (latestAllocated == null)
+            {
+                latestAllocated = idleLinkedList.First;
+            }
             start = best.Value.start;
             return true;
         }
@@ -258,6 +326,11 @@ public class MemoryController : MonoBehaviour
             if(worstDeltaSize == 0)
             {
                 worst.Value.type = NodeType.P;
+                latestAllocated = worst.Next;
+                if (latestAllocated == null)
+                {
+                    latestAllocated = idleLinkedList.First;
+                }
                 start = worst.Value.start;
                 return true;
             }
@@ -265,6 +338,11 @@ public class MemoryController : MonoBehaviour
             idleLinkedList.AddAfter(worst, nodeH);
             worst.Value.type = NodeType.P;
             worst.Value.size = requiredMemorySize;
+            latestAllocated = worst.Next;
+            if (latestAllocated == null)
+            {
+                latestAllocated = idleLinkedList.First;
+            }
             start = worst.Value.start;
             return true;
         }
